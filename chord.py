@@ -11,7 +11,7 @@ class Chord(Vertical):
    def compose(self) -> ComposeResult:
       self.border_title = "Chord"
       yield Static(" E  A  D  G  B  E ")
-      yield Static(" ╒══╤══╤══╤══╤══╕ ")
+      yield Static(" ╒══╤══╤══╤══╤══╕ " if self.position == 0 else f" ┌──┬──┬──┬──┬──┐ {self.position}")
       for row in range(5):
          yield Static(self.get_row(0))
          yield Static(" ├──┼──┼──┼──┼──┤ " if row == 4 else " ├──┼──┼──┼──┼──┤ ")
