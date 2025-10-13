@@ -32,14 +32,14 @@ class ChordDemoApp(App):
             with Horizontal():
                 with Vertical(classes="chord-container"):
                     yield Static("Major Chords", classes="subtitle")
-                    yield Chord()
-                    yield Chord()
-                    yield Chord()          
+                    yield Chord(classes="chord")
+                    yield Chord(classes="chord")
+                    yield Chord(classes="chord")          
                 with Vertical(classes="chord-container"):
                     yield Static("Minor Chords", classes="subtitle")
-                    yield Chord()
-                    yield Chord()
-                    yield Chord()                                        
+                    yield Chord(classes="chord")
+                    yield Chord(classes="chord")
+                    yield Chord(classes="chord")                                        
         yield Footer()
 
 
