@@ -9,6 +9,8 @@ from chord import Chord
 class ChordDemoApp(App):
     """A demo application showcasing the ChordWidget"""
 
+    CSS_PATH = "guitar_chords.tcss"
+
     BINDINGS = [
         Binding("q", "quit", "Quit"),
         Binding("c", "toggle_controls", "Toggle Controls"),
@@ -32,7 +34,7 @@ class ChordDemoApp(App):
                     yield Static("Major Chords", classes="subtitle")
                     yield Chord()
                     yield Chord()
-                    yield Chord()                    
+                    yield Chord()          
                 with Vertical(classes="chord-container"):
                     yield Static("Minor Chords", classes="subtitle")
                     yield Chord()
