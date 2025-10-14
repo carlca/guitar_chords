@@ -14,8 +14,10 @@ class Chord(Vertical):
       yield Static(" ╒══╤══╤══╤══╤══╕ " if self.position == 0 else f" ┌──┬──┬──┬──┬──┐ {self.position}")
       for row in range(5):
          yield Static(self.get_row(0))
-         yield Static(" ├──┼──┼──┼──┼──┤ " if row == 4 else " ├──┼──┼──┼──┼──┤ ")
+         yield Static(" ├──┼──┼──┼──┼──┤ " if row < 4 else " └──┴──┴──┴──┴──┘ ")
 
+   def add_pattern(pattern: List[str])-> None:
+      pass
 
    def get_row(self, row: int) -> str:
       result = " │  │  │  │  │  │ "
