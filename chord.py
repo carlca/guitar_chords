@@ -38,7 +38,7 @@ class ChordBase(Vertical):
          s =  " ┌─"
          s += "─┬─" * (self.get_string_count() - 2)
          s += "─┐ "
-         s += str(self.position)
+         # s += str(self.position)
       return s
 
    def get_fret_row(self, row: int) -> str:
@@ -50,6 +50,8 @@ class ChordBase(Vertical):
          s =  " ├─"
          s += "─┼─" * (self.get_string_count() - 2)
          s += "─┤ "
+         if row == 0:
+            s += str(self.position)
       return s
 
    def compose(self) -> ComposeResult:
