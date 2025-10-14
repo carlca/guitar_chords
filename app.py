@@ -32,7 +32,9 @@ class ChordDemoApp(App):
          with Horizontal():
             with Vertical(classes="chord-container"):
                yield Static("Major Chords", classes="subtitle")
-               yield GuitarChord(classes="chord")
+               chord = GuitarChord(classes="chord")
+               chord.add_barre(2, 2)
+               yield chord
                yield GuitarChord(1, classes="chord")
             with Vertical(classes="chord-container"):
                yield Static("Minor Chords", classes="subtitle")
