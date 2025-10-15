@@ -3,12 +3,21 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Button, Static, Input
 from textual import log
+from enum import Enum
+
+class BarreType(Enum):
+   UNASSIGNED = 0
+   FULL = 1
+   PART = 2
 
 
 class ChordBase(Vertical):
    def __init__(self, position=0, **kwargs):
       super().__init__(**kwargs)
+      self.barre_type = BarreType.UNASSIGNED
       self.position = position
+      self.part_pos = 0
+      self.show_pos = False
       self.barre_from = 0
       self.barre_to = 0
 
@@ -38,7 +47,6 @@ class ChordBase(Vertical):
          s = " ┌─"
          s += "─┬─" * (self.get_string_count() - 2)
          s += "─┐ "
-         # s += str(self.position)
       return s
 
    def get_fret_row(self, row: int) -> str:
@@ -50,8 +58,11 @@ class ChordBase(Vertical):
          s = " ├─"
          s += "─┼─" * (self.get_string_count() - 2)
          s += "─┤ "
-         if row == 0:
-            s += str(self.position)
+         if row == 0 and self.show_pos:
+            if self.position > 0:
+               s += str(self.position)      
+            if self.part_pos > 0:
+               s += str(self.part_pos)
       return s
 
    def compose(self) -> ComposeResult:
@@ -59,7 +70,7 @@ class ChordBase(Vertical):
       yield Static(self.get_string_names())
       yield Static(self.get_string_tops())
       for row in range(5):
-         yield Static(self.get_row(0))
+         yield Static(self.get_row(row))
          yield Static(self.get_fret_row(row))
 
    def add_pattern(pattern: str, position: int = 0) -> None:
@@ -67,13 +78,16 @@ class ChordBase(Vertical):
       pass
 
    def add_full_barre(self, position: int):
-      self.add_barre(position)
-
-   def add_part_barre(self):
-      pass
-
-   def add_barre(self, position: int, barre_from: int = 1, barre_to: int = 6):
+      self.barre_type = BarreType.FULL
       self.position = position
+      self.show_pos = True
+      self.barre_from = 1
+      self.barre_to = 6
+
+   def add_part_barre(self, part_pos: int, show_pos: bool, barre_from: int, barre_to: int):
+      self.barre_type = BarreType.PART
+      self.part_pos = part_pos
+      self.show_pos = show_pos
       self.barre_from = barre_from
       self.barre_to = barre_to
 
@@ -94,9 +108,13 @@ class ChordBase(Vertical):
          self.barre_from = 0
          self.barre_to = 0
          return s
-
-      if row == 0 and (self.barre_from > 1 or self.barre_to > 1):
-         return get_barre()
+      match self.barre_type:
+         case BarreType.FULL:
+            if row == 0 and (self.barre_from > 1 or self.barre_to > 1):
+               return get_barre()
+         case BarreType.PART:
+            if row == (self.part_pos - 1) and (self.barre_from > 1 or self.barre_to > 1):
+               return get_barre()
       s = " │ " * (self.get_string_count())
       return s
 
