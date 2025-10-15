@@ -12,10 +12,11 @@ class BarreType(Enum):
 
 
 class ChordBase(Vertical):
-   def __init__(self, position=0, **kwargs):
+   def __init__(self, position: int = 0, **kwargs):
       super().__init__(**kwargs)
       self.barre_type = BarreType.UNASSIGNED
       self.position = position
+      self.full_pos = 0
       self.part_pos = 0
       self.show_pos = False
       self.barre_from = 0
@@ -39,7 +40,7 @@ class ChordBase(Vertical):
       return s
 
    def get_string_tops(self) -> str:
-      if self.position == 0:
+      if self.full_pos == 0:
          s = " ╒═"
          s += "═╤═" * (self.get_string_count() - 2)
          s += "═╕ "
@@ -58,11 +59,12 @@ class ChordBase(Vertical):
          s = " ├─"
          s += "─┼─" * (self.get_string_count() - 2)
          s += "─┤ "
-         if row == 0 and self.show_pos:
-            if self.position > 0:
-               s += str(self.position)      
-            if self.part_pos > 0:
-               s += str(self.part_pos)
+         if self.show_pos:
+            if row == 0 and self.barre_type == BarreType.FULL and self.full_pos > 0:
+               s += str(self.full_pos)
+            if (row == self.part_pos - 1 and self.part_pos > 0):
+               s += str(self.part_pos)   
+
       return s
 
    def compose(self) -> ComposeResult:
@@ -72,14 +74,20 @@ class ChordBase(Vertical):
       for row in range(5):
          yield Static(self.get_row(row))
          yield Static(self.get_fret_row(row))
+      yield Static(f"barre_type {self.barre_type}")
+      yield Static(f"position {self.position}")
+      yield Static(f"full_pos {self.full_pos}")
+      yield Static(f"part_pos {self.part_pos}")
+      yield Static(f"show_pos {self.show_pos}")
 
-   def add_pattern(pattern: str, position: int = 0) -> None:
+
+   def add_pattern(pattern: str, full_pos: int = 0) -> None:
       # eg: C major "x32010"
       pass
 
-   def add_full_barre(self, position: int):
+   def add_full_barre(self, full_pos: int):
       self.barre_type = BarreType.FULL
-      self.position = position
+      self.full_pos = full_pos
       self.show_pos = True
       self.barre_from = 1
       self.barre_to = 6

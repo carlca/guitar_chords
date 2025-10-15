@@ -41,7 +41,9 @@ class ChordDemoApp(App):
             with Vertical(classes="chord-container"):
                yield Static("Minor Chords", classes="subtitle")
                yield UkeleleChord(classes="chord")
-               yield UkeleleChord(3, classes="chord")
+               chord = UkeleleChord(classes="chord")
+               chord.add_part_barre(2, True, 2, 4)
+               yield chord
       yield Footer()
 
 
