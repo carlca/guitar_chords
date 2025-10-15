@@ -31,11 +31,11 @@ class ChordBase(Vertical):
 
    def get_string_tops(self) -> str:
       if self.position == 0:
-         s =  " ╒═"
+         s = " ╒═"
          s += "═╤═" * (self.get_string_count() - 2)
          s += "═╕ "
       else:
-         s =  " ┌─"
+         s = " ┌─"
          s += "─┬─" * (self.get_string_count() - 2)
          s += "─┐ "
          # s += str(self.position)
@@ -43,11 +43,11 @@ class ChordBase(Vertical):
 
    def get_fret_row(self, row: int) -> str:
       if row == 4:
-         s =  " └─"
+         s = " └─"
          s += "─┴─" * (self.get_string_count() - 2)
          s += "─┘ "
       else:
-         s =  " ├─"
+         s = " ├─"
          s += "─┼─" * (self.get_string_count() - 2)
          s += "─┤ "
          if row == 0:
@@ -66,18 +66,24 @@ class ChordBase(Vertical):
       # eg: C major "x32010"
       pass
 
-   def add_barre(self, position: int, barre_from: int = 0, barre_to: int = 5):
+   def add_full_barre(self, position: int):
+      self.add_barre(position)
+
+   def add_part_barre(self):
+      pass
+
+   def add_barre(self, position: int, barre_from: int = 1, barre_to: int = 6):
       self.position = position
       self.barre_from = barre_from
       self.barre_to = barre_to
 
    def get_row(self, row: int) -> str:
-      if row == 0 and (self.barre_from > 0 or self.barre_to > 0):
+      def get_barre():
          s = ""
-         for string in range(self.get_string_count()):
+         for string in range(1, self.get_string_count() + 1):
             if string < self.barre_from:
                s += " │ "
-            elif string > self.barre_to:               
+            elif string > self.barre_to:
                s += " │ "
             elif string == self.barre_from:
                s += " ◉ "
@@ -88,7 +94,10 @@ class ChordBase(Vertical):
          self.barre_from = 0
          self.barre_to = 0
          return s
-      s = " │ " * self.get_string_count()
+
+      if row == 0 and (self.barre_from > 1 or self.barre_to > 1):
+         return get_barre()
+      s = " │ " * (self.get_string_count())
       return s
 
 
