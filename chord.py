@@ -80,9 +80,9 @@ class ChordBase(Vertical):
             elif string > self.barre_to:               
                s += " │ "
             elif string == self.barre_from:
-               s += " ◉○"
+               s += " ◉ "
             elif string == self.barre_to:
-               s += " ◉○"
+               s += " ◉ "
             else:
                s += "━━━"
          self.barre_from = 0
