@@ -40,7 +40,16 @@ class ChordBase(Vertical):
       return s
 
    def get_string_tops(self) -> str:
-      if self.full_pos == 0:
+      # Check if we're showing a position higher than the open position (fret 0)
+      # For full barre, use full_pos; for partial barre, use part_pos
+      if self.barre_type == BarreType.FULL:
+         position = self.full_pos
+      elif self.barre_type == BarreType.PART:
+         position = self.part_pos
+      else:
+         position = 0
+         
+      if position <= 2:  # Show double lines for open position or first/second fret
          s = " ╒═"
          s += "═╤═" * (self.get_string_count() - 2)
          s += "═╕ "
@@ -60,10 +69,18 @@ class ChordBase(Vertical):
          s += "─┼─" * (self.get_string_count() - 2)
          s += "─┤ "
          if self.show_pos:
+            # Calculate actual fret position based on the highest barre
+            max_fret = max(self.full_pos, self.part_pos)
+            base_fret = max(1, max_fret - 2)  # Show at most 2 frets before the highest barre
+            
             if row == 0 and self.barre_type == BarreType.FULL and self.full_pos > 0:
                s += str(self.full_pos)
-            if (row == self.part_pos - 1 and self.part_pos > 0):
-               s += str(self.part_pos)   
+            # For high fret positions (>= 10), show the fret number on the first row only
+            elif self.barre_type == BarreType.PART and self.part_pos >= 10 and row == 0:
+               s += str(self.part_pos)
+            # For lower positions, show the fret number on the correct row
+            elif (row == self.part_pos - base_fret and self.part_pos > 0 and self.part_pos < 10):
+               s += str(self.part_pos)
 
       return s
 
@@ -74,11 +91,11 @@ class ChordBase(Vertical):
       for row in range(5):
          yield Static(self.get_row(row))
          yield Static(self.get_fret_row(row))
-      yield Static(f"barre_type {self.barre_type}")
-      yield Static(f"position {self.position}")
-      yield Static(f"full_pos {self.full_pos}")
-      yield Static(f"part_pos {self.part_pos}")
-      yield Static(f"show_pos {self.show_pos}")
+      # yield Static(f"barre_type {self.barre_type}")
+      # yield Static(f"position {self.position}")
+      # yield Static(f"full_pos {self.full_pos}")
+      # yield Static(f"part_pos {self.part_pos}")
+      # yield Static(f"show_pos {self.show_pos}")
 
 
    def add_pattern(pattern: str, full_pos: int = 0) -> None:
@@ -90,7 +107,7 @@ class ChordBase(Vertical):
       self.full_pos = full_pos
       self.show_pos = True
       self.barre_from = 1
-      self.barre_to = 6
+      self.barre_to = self.get_string_count()
 
    def add_part_barre(self, part_pos: int, show_pos: bool, barre_from: int, barre_to: int):
       self.barre_type = BarreType.PART
@@ -113,15 +130,22 @@ class ChordBase(Vertical):
                s += " ◉ "
             else:
                s += "━━━"
-         self.barre_from = 0
-         self.barre_to = 0
          return s
       match self.barre_type:
          case BarreType.FULL:
             if row == 0 and (self.barre_from > 1 or self.barre_to > 1):
                return get_barre()
          case BarreType.PART:
-            if row == (self.part_pos - 1) and (self.barre_from > 1 or self.barre_to > 1):
+            # For high fret positions (>= 10), display in first position
+            if self.part_pos >= 10:
+               display_row = 0
+            else:
+               # Calculate which row to display the part barre on
+               max_fret = max(self.full_pos, self.part_pos)
+               base_fret = max(1, max_fret - 2)  # Show at most 2 frets before the highest barre
+               display_row = self.part_pos - base_fret
+            
+            if row == display_row and (self.barre_from > 1 or self.barre_to > 1):
                return get_barre()
       s = " │ " * (self.get_string_count())
       return s

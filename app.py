@@ -38,9 +38,14 @@ class ChordDemoApp(App):
                chord = GuitarChord(classes="chord")
                chord.add_part_barre(2, True, 3, 5)
                yield chord
+               chord = GuitarChord(classes="chord")
+               chord.add_part_barre(12, True, 2, 4)
+               yield chord
             with Vertical(classes="chord-container"):
                yield Static("Minor Chords", classes="subtitle")
-               yield UkeleleChord(classes="chord")
+               chord = UkeleleChord(classes="chord")
+               chord.add_full_barre(9)
+               yield chord
                chord = UkeleleChord(classes="chord")
                chord.add_part_barre(2, True, 2, 4)
                yield chord
