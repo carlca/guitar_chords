@@ -75,11 +75,11 @@ class ChordBase(Vertical):
             
             if row == 0 and self.barre_type == BarreType.FULL and self.full_pos > 0:
                s += str(self.full_pos)
-            # For high fret positions (>= 10), show the fret number on the first row only
-            elif self.barre_type == BarreType.PART and self.part_pos >= 10 and row == 0:
+            # For high fret positions (>= 4), show the fret number on the first row only
+            elif self.barre_type == BarreType.PART and self.part_pos >= 3 and row == 0:
                s += str(self.part_pos)
             # For lower positions, show the fret number on the correct row
-            elif (row == self.part_pos - base_fret and self.part_pos > 0 and self.part_pos < 10):
+            elif (row == self.part_pos - base_fret and self.part_pos > 0 and self.part_pos < 3):
                s += str(self.part_pos)
 
       return s
@@ -136,8 +136,8 @@ class ChordBase(Vertical):
             if row == 0 and (self.barre_from > 1 or self.barre_to > 1):
                return get_barre()
          case BarreType.PART:
-            # For high fret positions (>= 10), display in first position
-            if self.part_pos >= 10:
+            # For high fret positions (>= 4), display in first position
+            if self.part_pos >= 3:
                display_row = 0
             else:
                # Calculate which row to display the part barre on
