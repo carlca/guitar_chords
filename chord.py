@@ -6,7 +6,7 @@ from textual import log
 from enum import Enum
 
 class BarreType(Enum):
-   UNASSIGNED = 0
+   NONE = 0
    FULL = 1
    PART = 2
 
@@ -40,8 +40,6 @@ class ChordBase(Vertical):
       return s
 
    def get_string_tops(self) -> str:
-      # Check if we're showing a position higher than the open position (fret 0)
-      # For full barre, use full_pos; for partial barre, use part_pos
       if self.barre_type == BarreType.FULL:
          position = self.full_pos
       elif self.barre_type == BarreType.PART:
