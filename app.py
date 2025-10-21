@@ -3,7 +3,7 @@ from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.widgets import Header, Footer, Static, Button, Checkbox, Switch
 from textual.binding import Binding
 from textual import log
-from chord import GuitarChord, UkeleleChord
+from chord import GuitarChord, UkuleleChord
 
 
 class ChordDemoApp(App):
@@ -43,10 +43,10 @@ class ChordDemoApp(App):
                yield chord
             with Vertical(classes="chord-container"):
                yield Static("Minor Chords", classes="subtitle")
-               chord = UkeleleChord(classes="chord")
+               chord = UkuleleChord(classes="chord")
                chord.add_full_barre(9)
                yield chord
-               chord = UkeleleChord(classes="chord")
+               chord = UkuleleChord(classes="chord")
                chord.add_part_barre(2, True, 2, 4)
                yield chord
       yield Footer()

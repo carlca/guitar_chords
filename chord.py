@@ -14,7 +14,7 @@ class BarreType(Enum):
 class ChordBase(Vertical):
    def __init__(self, position: int = 0, **kwargs):
       super().__init__(**kwargs)
-      self.barre_type = BarreType.UNASSIGNED
+      self.barre_type = BarreType.NONE
       self.position = position
       self.full_pos = 0
       self.part_pos = 0
@@ -157,9 +157,9 @@ class GuitarChord(ChordBase):
       return "Guitar"
 
 
-class UkeleleChord(ChordBase):
+class UkuleleChord(ChordBase):
    def get_strings(self) -> list[str]:
       return ["G", "C", "E", "A"]
 
    def get_instrument_type(self) -> str:
-      return "Ukelele"
+      return "Ukulele"
