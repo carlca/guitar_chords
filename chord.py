@@ -5,17 +5,28 @@ from textual.widgets import Button, Static, Input
 from textual import log
 from enum import Enum
 
+
 class BarreType(Enum):
    NONE = 0
    FULL = 1
    PART = 2
 
 
+class FretRow(Enum):
+   TOP = 0
+   MIDDLE_1 = 1
+   MIDDLE_2 = 2
+   MIDDLE_3 = 3
+   BOTTOM = 4
+
+SECOND_FRET = 2
+FRET_OFFSET = 2
+FRET_COUNT = 4
+
 class ChordBase(Vertical):
-   def __init__(self, position: int = 0, **kwargs):
+   def __init__(self, **kwargs):
       super().__init__(**kwargs)
       self.barre_type = BarreType.NONE
-      self.position = position
       self.full_pos = 0
       self.part_pos = 0
       self.show_pos = False
@@ -30,63 +41,86 @@ class ChordBase(Vertical):
    def get_instrument_type(self) -> str:
       pass
 
-   def get_string_count(self) -> int:
+   @property
+   def string_count(self) -> int:
       return len(self.get_strings())
 
    def get_string_names(self) -> str:
-      s = ""
-      for string in self.get_strings():
-         s += f" {string} "
-      return s
+      return " ".join(f" {s}" for s in self.get_strings())
+
+   def _get_current_barre_position(self) -> int:
+      """Get the current barre position based on barre type."""
+      if self.barre_type == BarreType.FULL:
+         return self.full_pos
+      elif self.barre_type == BarreType.PART:
+         return self.part_pos
+      else:
+         return 0
 
    def get_string_tops(self) -> str:
-      if self.barre_type == BarreType.FULL:
-         position = self.full_pos
-      elif self.barre_type == BarreType.PART:
-         position = self.part_pos
-      else:
-         position = 0
-         
-      if position <= 2:  # Show double lines for open position or first/second fret
+      position = self._get_current_barre_position()
+
+      if position <= SECOND_FRET:
          s = " ╒═"
-         s += "═╤═" * (self.get_string_count() - 2)
+         s += "═╤═" * (self.string_count - 2)
          s += "═╕ "
       else:
          s = " ┌─"
-         s += "─┬─" * (self.get_string_count() - 2)
+         s += "─┬─" * (self.string_count - 2)
          s += "─┐ "
       return s
 
+
+   def _calculate_base_fret(self) -> int:
+      """Calculate the base fret position."""
+      max_fret = max(self.full_pos, self.part_pos)
+      return max(1, max_fret - FRET_OFFSET)
+
+   def _get_fret_number_to_show(self, row: int, base_fret: int) -> int | None:
+      """Determine which fret number to show for a given row."""
+      if not self.show_pos:
+         return None
+
+      if row == 0 and self.barre_type == BarreType.FULL and self.full_pos > 0:
+         return self.full_pos
+      elif self.barre_type == BarreType.PART and self.part_pos >= 3 and row == 0:
+         return self.part_pos
+      elif row == self.part_pos - base_fret and 0 < self.part_pos < 3:
+         return self.part_pos
+      return None
+
+   def _calculate_display_row(self) -> int:
+      """Calculate which row to display a partial barre on."""
+      max_fret = max(self.full_pos, self.part_pos)
+      base_fret = max(1, max_fret - FRET_OFFSET)
+      return self.part_pos - base_fret
+
+
    def get_fret_row(self, row: int) -> str:
-      if row == 4:
+      if row == FRET_COUNT - 1:
          s = " └─"
-         s += "─┴─" * (self.get_string_count() - 2)
+         s += "─┴─" * (self.string_count - 2)
          s += "─┘ "
       else:
          s = " ├─"
-         s += "─┼─" * (self.get_string_count() - 2)
+         s += "─┼─" * (self.string_count - 2)
          s += "─┤ "
+
          if self.show_pos:
-            # Calculate actual fret position based on the highest barre
-            max_fret = max(self.full_pos, self.part_pos)
-            base_fret = max(1, max_fret - 2)  # Show at most 2 frets before the highest barre
-            
-            if row == 0 and self.barre_type == BarreType.FULL and self.full_pos > 0:
-               s += str(self.full_pos)
-            # For high fret positions (>= 4), show the fret number on the first row only
-            elif self.barre_type == BarreType.PART and self.part_pos >= 3 and row == 0:
-               s += str(self.part_pos)
-            # For lower positions, show the fret number on the correct row
-            elif (row == self.part_pos - base_fret and self.part_pos > 0 and self.part_pos < 3):
-               s += str(self.part_pos)
+            base_fret = self._calculate_base_fret()
+            fret_num = self._get_fret_number_to_show(row, base_fret)
+            if fret_num:
+               s += str(fret_num)
 
       return s
+
+
 
    def compose(self) -> ComposeResult:
       self.border_title = f"{self.get_instrument_type()} Chord"
       yield Static(self.get_string_names())
       yield Static(self.get_string_tops())
-      for row in range(5):
+      for row in range(FRET_COUNT):
          yield Static(self.get_row(row))
          yield Static(self.get_fret_row(row))
       # yield Static(f"barre_type {self.barre_type}")
@@ -96,7 +130,7 @@ class ChordBase(Vertical):
       # yield Static(f"show_pos {self.show_pos}")
 
 
-   def add_pattern(pattern: str, full_pos: int = 0) -> None:
+   def add_pattern(self, pattern: str, full_pos: int = 0) -> None:
       # eg: C major "x32010"
       pass
 
@@ -105,7 +139,7 @@ class ChordBase(Vertical):
       self.full_pos = full_pos
       self.show_pos = True
       self.barre_from = 1
-      self.barre_to = self.get_string_count()
+      self.barre_to = self.string_count
 
    def add_part_barre(self, part_pos: int, show_pos: bool, barre_from: int, barre_to: int):
       self.barre_type = BarreType.PART
@@ -114,39 +148,39 @@ class ChordBase(Vertical):
       self.barre_from = barre_from
       self.barre_to = barre_to
 
-   def get_row(self, row: int) -> str:
-      def get_barre():
-         s = ""
-         for string in range(1, self.get_string_count() + 1):
-            if string < self.barre_from:
-               s += " │ "
-            elif string > self.barre_to:
-               s += " │ "
-            elif string == self.barre_from:
-               s += " ◉ "
-            elif string == self.barre_to:
-               s += " ◉ "
-            else:
-               s += "━━━"
-         return s
-      match self.barre_type:
-         case BarreType.FULL:
-            if row == 0 and (self.barre_from > 1 or self.barre_to > 1):
-               return get_barre()
-         case BarreType.PART:
-            # For high fret positions (>= 4), display in first position
-            if self.part_pos >= 3:
-               display_row = 0
-            else:
-               # Calculate which row to display the part barre on
-               max_fret = max(self.full_pos, self.part_pos)
-               base_fret = max(1, max_fret - 2)  # Show at most 2 frets before the highest barre
-               display_row = self.part_pos - base_fret
-            
-            if row == display_row and (self.barre_from > 1 or self.barre_to > 1):
-               return get_barre()
-      s = " │ " * (self.get_string_count())
+   def _should_show_barre(self, row: int) -> bool:
+      """Check if a barre should be shown on the given row."""
+      if self.barre_type == BarreType.FULL:
+         return row == 0 and (self.barre_from > 1 or self.barre_to > 1)
+
+      if self.barre_type == BarreType.PART:
+         display_row = 0 if self.part_pos >= 3 else self._calculate_display_row()
+         return row == display_row and (self.barre_from > 1 or self.barre_to > 1)
+
+      return False
+
+   def _build_barre_row(self) -> str:
+      """Build a barre row using efficient string joining."""
+      s = ""
+      for string in range(1, self.string_count + 1):
+         if string < self.barre_from:
+            s += " │ "
+         elif string > self.barre_to:
+            s += " │ "
+         elif string == self.barre_from:
+            s += " ◉ "
+         elif string == self.barre_to:
+            s += " ◉ "
+         else:
+            s += "━━━"
       return s
+
+   def get_row(self, row: int) -> str:
+      if self._should_show_barre(row):
+         return self._build_barre_row()
+
+      return " │ " * self.string_count
+
 
 
 class GuitarChord(ChordBase):
