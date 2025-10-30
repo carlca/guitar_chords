@@ -59,7 +59,6 @@ class ChordBase(Vertical):
 
    def get_string_tops(self) -> str:
       position = self._get_current_barre_position()
-
       if position <= SECOND_FRET:
          s = " ╒═"
          s += "═╤═" * (self.string_count - 2)
