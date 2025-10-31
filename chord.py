@@ -12,13 +12,6 @@ class BarreType(Enum):
    PART = 2
 
 
-class FretRow(Enum):
-   TOP = 0
-   MIDDLE_1 = 1
-   MIDDLE_2 = 2
-   MIDDLE_3 = 3
-   BOTTOM = 4
-
 SECOND_FRET = 2
 FRET_OFFSET = 2
 FRET_COUNT = 4
@@ -59,16 +52,12 @@ class ChordBase(Vertical):
 
    def get_string_tops(self) -> str:
       position = self._get_current_barre_position()
+      count = self.string_count
       if position <= SECOND_FRET:
-         s = " ╒═"
-         s += "═╤═" * (self.string_count - 2)
-         s += "═╕ "
+         parts = [" ╒═"] + ["═╤═"] * (count - 2) + ["═╕ "]
       else:
-         s = " ┌─"
-         s += "─┬─" * (self.string_count - 2)
-         s += "─┐ "
-      return s
-
+         parts = [" ┌─"] + ["─┬─"] * (count - 2) + ["─┐ "]
+      return "".join(parts)
 
    def _calculate_base_fret(self) -> int:
       """Calculate the base fret position."""
@@ -94,26 +83,20 @@ class ChordBase(Vertical):
       base_fret = max(1, max_fret - FRET_OFFSET)
       return self.part_pos - base_fret
 
-
    def get_fret_row(self, row: int) -> str:
+      count = self.string_count
       if row == FRET_COUNT - 1:
-         s = " └─"
-         s += "─┴─" * (self.string_count - 2)
-         s += "─┘ "
+         parts = [" └─"] + ["─┴─"] * (count - 2) + ["─┘ "]
       else:
-         s = " ├─"
-         s += "─┼─" * (self.string_count - 2)
-         s += "─┤ "
+         parts = [" ├─"] + ["─┼─"] * (count - 2) + ["─┤ "]
+      # Check if we need to add a fret number
+      if self.show_pos:
+         base_fret = self._calculate_base_fret()
+         fret_num = self._get_fret_number_to_show(row, base_fret)
+         if fret_num:
+            parts[-1] = parts[-1][:-1] + str(fret_num) + " "
 
-         if self.show_pos:
-            base_fret = self._calculate_base_fret()
-            fret_num = self._get_fret_number_to_show(row, base_fret)
-            if fret_num:
-               s += str(fret_num)
-
-      return s
-
-
+      return "".join(parts)
 
    def compose(self) -> ComposeResult:
       self.border_title = f"{self.get_instrument_type()} Chord"
@@ -122,12 +105,6 @@ class ChordBase(Vertical):
       for row in range(FRET_COUNT):
          yield Static(self.get_row(row))
          yield Static(self.get_fret_row(row))
-      # yield Static(f"barre_type {self.barre_type}")
-      # yield Static(f"position {self.position}")
-      # yield Static(f"full_pos {self.full_pos}")
-      # yield Static(f"part_pos {self.part_pos}")
-      # yield Static(f"show_pos {self.show_pos}")
-
 
    def add_pattern(self, pattern: str, full_pos: int = 0) -> None:
       # eg: C major "x32010"
@@ -148,7 +125,6 @@ class ChordBase(Vertical):
       self.barre_to = barre_to
 
    def _should_show_barre(self, row: int) -> bool:
-      """Check if a barre should be shown on the given row."""
       if self.barre_type == BarreType.FULL:
          return row == 0 and (self.barre_from > 1 or self.barre_to > 1)
 
@@ -159,20 +135,15 @@ class ChordBase(Vertical):
       return False
 
    def _build_barre_row(self) -> str:
-      """Build a barre row using efficient string joining."""
-      s = ""
+      cells = []
       for string in range(1, self.string_count + 1):
-         if string < self.barre_from:
-            s += " │ "
-         elif string > self.barre_to:
-            s += " │ "
-         elif string == self.barre_from:
-            s += " ◉ "
-         elif string == self.barre_to:
-            s += " ◉ "
+         if string < self.barre_from or string > self.barre_to:
+            cells.append(" │ ")
+         elif string == self.barre_from or string == self.barre_to:
+            cells.append(" ◉ ")
          else:
-            s += "━━━"
-      return s
+            cells.append("━━━")
+      return "".join(cells)
 
    def get_row(self, row: int) -> str:
       if self._should_show_barre(row):
